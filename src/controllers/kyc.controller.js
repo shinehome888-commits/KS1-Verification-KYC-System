@@ -2,14 +2,12 @@ const KycRequest = require('../models/KycRequest.model');
 const IdentityRecord = require('../models/IdentityRecord.model');
 const VerificationResult = require('../models/VerificationResult.model');
 const { calculateRiskLevel } = require('../services/riskEngine.service');
-const { producer } = require('../config/kafka');
 
+// 🔥 NO KAFKA — removed entirely
 const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
-  
-  // Emit events (Kafka disabled → logs only)
-  console.log('✅ [EVENT] ks1.kyc.approved:', { smeId, businessName });
-  console.log('✅ [EVENT] ks1.masterdata.update:', { smeId, status: 'VERIFIED' });
+  console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
+  // Later: call Trade ID via HTTP
 };
 
 const startVerification = async (req, res) => {
@@ -63,7 +61,7 @@ const getPendingReviews = async (req, res) => {
     res.json(pending || []);
   } catch (err) {
     console.error('Pending reviews error:', err.message);
-    res.status(500).json([]);
+    res.status(500).json([]); // Never crash
   }
 };
 
