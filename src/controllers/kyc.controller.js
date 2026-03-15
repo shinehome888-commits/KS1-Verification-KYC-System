@@ -3,7 +3,6 @@ const IdentityRecord = require('../models/IdentityRecord.model');
 const VerificationResult = require('../models/VerificationResult.model');
 const { calculateRiskLevel } = require('../services/riskEngine.service');
 
-// 🔥 NO KAFKA — removed entirely
 const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
   console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
