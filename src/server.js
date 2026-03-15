@@ -11,7 +11,6 @@ app.use(helmet());
 app.use(cors({ origin: /\.pages\.dev$/ }));
 app.use(express.json());
 
-// Load routes AFTER DB is ready
 app.use('/api/kyc', require('./routes/kyc.routes'));
 
 app.get('/health', (req, res) => {
@@ -22,7 +21,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Start ONLY after DB connects
 const start = async () => {
   try {
     await require('./config/db');
