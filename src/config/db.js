@@ -5,4 +5,4 @@ const connectDB = async () => {
   console.log('✅ MongoDB connected – KS1 KYC System');
 };
 
-module.exports = connectDB(); // Export promise
+module.exports = connectDB();
