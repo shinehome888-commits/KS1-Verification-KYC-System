@@ -55,13 +55,15 @@ const getStatus = async (req, res) => {
 
 const getPendingReviews = async (req, res) => {
   try {
-    const pending = await KycRequest.find({ 
+    const pending = await KycRequest.find({
       status: 'KYC_PENDING',
       riskLevel: { $in: ['MEDIUM', 'HIGH'] }
-    }).limit(50);
-    res.json(pending);
+    }).limit(50).lean();
+
+    res.json(pending || []);
   } catch (err) {
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Pending reviews error:', err.message);
+    res.status(500).json([]);
   }
 };
 
