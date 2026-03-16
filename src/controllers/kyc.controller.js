@@ -3,11 +3,28 @@ const IdentityRecord = require('../models/IdentityRecord.model');
 const VerificationResult = require('../models/VerificationResult.model');
 const { calculateRiskLevel } = require('../services/riskEngine.service');
 
+// 🔥 UPDATED: Now triggers BOTH Trade ID and Trust Score
 const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
   console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
 
-  // 🔥 Notify Trust Score
+  // 🔑 STEP 1: Generate KS1 Trade ID
+  try {
+    const tradeRes = await fetch('https://ks1-trade-id.onrender.com/api/generate-trade-id', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ smeId, businessName })
+    });
+    if (tradeRes.ok) {
+      console.log('✅ KS1 Trade ID generated for:', smeId);
+    } else {
+      console.warn('⚠️ Trade ID generation returned non-OK status');
+    }
+  } catch (err) {
+    console.error('❌ Failed to generate Trade ID:', err.message);
+  }
+
+  // 🌟 STEP 2: Notify Trust Score
   try {
     await fetch('https://ks1-trust-score.onrender.com/api/trust/recalculate', {
       method: 'POST',
