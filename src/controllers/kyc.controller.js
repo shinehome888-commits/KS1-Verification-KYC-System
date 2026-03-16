@@ -6,6 +6,22 @@ const { calculateRiskLevel } = require('../services/riskEngine.service');
 const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
   console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
+
+  // 🔥 Notify Trust Score Service
+  try {
+    await fetch('https://ks1-trust-score.onrender.com/api/trust/recalculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        smeId,
+        eventType: 'kyc.verified',
+        eventData: {}
+      })
+    });
+    console.log('✅ Trust Score event sent for KYC verification');
+  } catch (err) {
+    console.error('❌ Failed to notify Trust Score:', err.message);
+  }
 };
 
 const startVerification = async (req, res) => {
