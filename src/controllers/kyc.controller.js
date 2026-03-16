@@ -7,7 +7,7 @@ const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
   console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
 
-  // 🔥 Notify Trust Score Service
+  // 🔥 Notify Trust Score
   try {
     await fetch('https://ks1-trust-score.onrender.com/api/trust/recalculate', {
       method: 'POST',
