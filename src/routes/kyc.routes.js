@@ -1,5 +1,3 @@
-const kycController = require('../controllers/kyc.controller');
-
 const express = require('express');
 const router = express.Router();
 const kycController = require('../controllers/kyc.controller');
