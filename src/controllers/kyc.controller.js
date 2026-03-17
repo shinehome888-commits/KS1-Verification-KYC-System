@@ -7,6 +7,7 @@ const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
   console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
 
+  // Notify Trade ID System
   try {
     await fetch('https://ks1-trade-id.onrender.com/api/generate-trade-id', {
       method: 'POST',
@@ -18,6 +19,7 @@ const approveInternally = async (smeId, businessName) => {
     console.error('❌ Failed to generate Trade ID:', err.message);
   }
 
+  // Notify Trust Score System (via HTTP, not shared code)
   try {
     await fetch('https://ks1-trust-score.onrender.com/api/trust/recalculate', {
       method: 'POST',
@@ -40,6 +42,7 @@ const startVerification = async (req, res) => {
     if (!smeId || !ownerName || !idType || !idNumber) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
+
     await IdentityRecord.create({
       smeId,
       ownerName,
@@ -47,12 +50,15 @@ const startVerification = async (req, res) => {
       idNumber,
       documentUrl: Array.isArray(documentUrls) ? documentUrls[0] : documentUrls
     });
+
     const riskLevel = await calculateRiskLevel({ smeId, idType, idNumber, city });
     await KycRequest.create({ smeId, riskLevel });
+
     if (riskLevel === 'LOW') {
       await approveInternally(smeId, businessName);
       return res.json({ success: true, status: 'KYC_APPROVED', riskLevel });
     }
+
     res.json({ success: true, status: 'KYC_PENDING', riskLevel, message: 'Awaiting manual review' });
   } catch (err) {
     console.error('KYC Error:', err.message);
@@ -106,7 +112,7 @@ const rejectSME = async (req, res) => {
   }
 };
 
-// ✅ STATS ENDPOINT
+// ✅ Stats endpoint — only uses KYC data
 const getStats = async (req, res) => {
   try {
     const verified = await KycRequest.countDocuments({ status: 'KYC_APPROVED' });
@@ -121,8 +127,8 @@ const getStats = async (req, res) => {
 module.exports = {
   startVerification,
   getStatus,
+  getPendingReviews,
   approveSME,
   rejectSME,
-  getPendingReviews,
   getStats
 };
