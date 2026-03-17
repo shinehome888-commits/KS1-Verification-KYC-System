@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const kycController = require('../controllers/kyc.controller');
+const trustController = require('../controllers/trust.controller');
 
-router.post('/start-verification', kycController.startVerification);
-router.get('/status/:smeId', kycController.getStatus);
-router.get('/pending', kycController.getPendingReviews);
-router.post('/admin/approve', kycController.approveSME);
-router.post('/admin/reject', kycController.rejectSME);
-router.get('/stats', kycController.getStats); // 👈 STATS ENDPOINT
+router.post('/recalculate', trustController.recalculateTrustScore);
+router.get('/score/:smeId', trustController.getTrustScore);
+router.get('/leaderboard', trustController.getLeaderboard);
+router.get('/stats', trustController.getStats);
 
 module.exports = router;
