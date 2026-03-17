@@ -1,10 +1,7 @@
 const mongoose = require('mongoose');
-
-const KycRequestSchema = new mongoose.Schema({
-  smeId: { type: String, required: true, unique: true },
-  status: { type: String, enum: ['KYC_PENDING', 'KYC_APPROVED', 'KYC_REJECTED'], default: 'KYC_PENDING' },
-  riskLevel: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH'] },
-  createdAt: { type: Date, default: Date.now }
+const schema = new mongoose.Schema({
+  smeId: String,
+  status: { type: String, default: 'KYC_PENDING' },
+  riskLevel: String
 });
-
-module.exports = mongoose.model('KycRequest', KycRequestSchema);
+module.exports = mongoose.model('KycRequest', schema);
