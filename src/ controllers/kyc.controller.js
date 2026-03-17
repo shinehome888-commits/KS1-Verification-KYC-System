@@ -10,7 +10,7 @@ const getStats = async (req, res) => {
   }
 };
 
-// Minimal placeholder functions to avoid "undefined" errors
+// Minimal placeholder functions
 const startVerification = (req, res) => res.json({ success: true });
 const getStatus = (req, res) => res.json({});
 const getPendingReviews = (req, res) => res.json([]);
