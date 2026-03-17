@@ -1,5 +1,6 @@
 const TrustScore = require('../models/TrustScore.model');
 
+// ✅ Define ALL functions BEFORE exporting
 const recalculateTrustScore = async (req, res) => {
   try {
     const { smeId, eventType, eventData } = req.body;
@@ -9,7 +10,13 @@ const recalculateTrustScore = async (req, res) => {
 
     let scoreDoc = await TrustScore.findOne({ smeId });
     if (!scoreDoc) {
-      scoreDoc = new TrustScore({ smeId, trustScore: 50, completedTransactions: 0, disputesCount: 0, tradeVolume: 0 });
+      scoreDoc = new TrustScore({
+        smeId,
+        trustScore: 50,
+        completedTransactions: 0,
+        disputesCount: 0,
+        tradeVolume: 0
+      });
     }
 
     switch (eventType) {
@@ -17,7 +24,7 @@ const recalculateTrustScore = async (req, res) => {
         scoreDoc.trustScore = Math.min(100, scoreDoc.trustScore + 15);
         break;
       case 'transaction.completed':
-        const amount = eventData.amount || 0;
+        const amount = eventData?.amount || 0;
         scoreDoc.completedTransactions += 1;
         scoreDoc.tradeVolume += amount;
         scoreDoc.trustScore = Math.min(100, scoreDoc.trustScore + 5);
@@ -35,7 +42,11 @@ const recalculateTrustScore = async (req, res) => {
     else scoreDoc.trustTier = 'Bronze';
 
     await scoreDoc.save();
-    res.json({ success: true, trustScore: scoreDoc.trustScore, trustTier: scoreDoc.trustTier });
+    res.json({
+      success: true,
+      trustScore: scoreDoc.trustScore,
+      trustTier: scoreDoc.trustTier
+    });
   } catch (err) {
     console.error('Recalculate error:', err.message);
     res.status(500).json({ message: 'Server error' });
@@ -46,7 +57,11 @@ const getTrustScore = async (req, res) => {
   try {
     const score = await TrustScore.findOne({ smeId: req.params.smeId });
     if (!score) {
-      return res.json({ smeId: req.params.smeId, trustScore: 50, trustTier: 'Bronze' });
+      return res.json({
+        smeId: req.params.smeId,
+        trustScore: 50,
+        trustTier: 'Bronze'
+      });
     }
     res.json(score);
   } catch (err) {
@@ -69,7 +84,7 @@ const getLeaderboard = async (req, res) => {
 const getStats = async (req, res) => {
   try {
     const scores = await TrustScore.find().select('trustScore');
-    const avg = scores.length 
+    const avg = scores.length
       ? parseFloat((scores.reduce((sum, s) => sum + s.trustScore, 0) / scores.length).toFixed(1))
       : 50;
     res.json({ average: avg });
@@ -78,7 +93,7 @@ const getStats = async (req, res) => {
   }
 };
 
-// ✅ EXPORT ALL FUNCTIONS — NOW DEFINED
+// ✅ Export ONLY after defining all functions
 module.exports = {
   recalculateTrustScore,
   getTrustScore,
