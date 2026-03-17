@@ -1,6 +1,5 @@
 const TrustScore = require('../models/TrustScore.model');
 
-// ✅ Define ALL functions BEFORE exporting
 const recalculateTrustScore = async (req, res) => {
   try {
     const { smeId, eventType, eventData } = req.body;
@@ -35,18 +34,13 @@ const recalculateTrustScore = async (req, res) => {
         break;
     }
 
-    // Update tier
     if (scoreDoc.trustScore >= 80) scoreDoc.trustTier = 'Platinum';
     else if (scoreDoc.trustScore >= 70) scoreDoc.trustTier = 'Gold';
     else if (scoreDoc.trustScore >= 60) scoreDoc.trustTier = 'Silver';
     else scoreDoc.trustTier = 'Bronze';
 
     await scoreDoc.save();
-    res.json({
-      success: true,
-      trustScore: scoreDoc.trustScore,
-      trustTier: scoreDoc.trustTier
-    });
+    res.json({ success: true, trustScore: scoreDoc.trustScore, trustTier: scoreDoc.trustTier });
   } catch (err) {
     console.error('Recalculate error:', err.message);
     res.status(500).json({ message: 'Server error' });
@@ -57,11 +51,7 @@ const getTrustScore = async (req, res) => {
   try {
     const score = await TrustScore.findOne({ smeId: req.params.smeId });
     if (!score) {
-      return res.json({
-        smeId: req.params.smeId,
-        trustScore: 50,
-        trustTier: 'Bronze'
-      });
+      return res.json({ smeId: req.params.smeId, trustScore: 50, trustTier: 'Bronze' });
     }
     res.json(score);
   } catch (err) {
@@ -93,7 +83,7 @@ const getStats = async (req, res) => {
   }
 };
 
-// ✅ Export ONLY after defining all functions
+// ✅ EXPORT ONLY AFTER DEFINING ALL FUNCTIONS
 module.exports = {
   recalculateTrustScore,
   getTrustScore,
