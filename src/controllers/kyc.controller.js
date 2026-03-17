@@ -3,28 +3,21 @@ const IdentityRecord = require('../models/IdentityRecord.model');
 const VerificationResult = require('../models/VerificationResult.model');
 const { calculateRiskLevel } = require('../services/riskEngine.service');
 
-// 🔥 UPDATED: Now triggers BOTH Trade ID and Trust Score
 const approveInternally = async (smeId, businessName) => {
   await KycRequest.findOneAndUpdate({ smeId }, { status: 'KYC_APPROVED' });
   console.log('✅ [APPROVED] SME:', smeId, '| Business:', businessName);
 
-  // 🔑 STEP 1: Generate KS1 Trade ID
   try {
-    const tradeRes = await fetch('https://ks1-trade-id.onrender.com/api/generate-trade-id', {
+    await fetch('https://ks1-trade-id.onrender.com/api/generate-trade-id', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ smeId, businessName })
     });
-    if (tradeRes.ok) {
-      console.log('✅ KS1 Trade ID generated for:', smeId);
-    } else {
-      console.warn('⚠️ Trade ID generation returned non-OK status');
-    }
+    console.log('✅ KS1 Trade ID generated for:', smeId);
   } catch (err) {
     console.error('❌ Failed to generate Trade ID:', err.message);
   }
 
-  // 🌟 STEP 2: Notify Trust Score
   try {
     await fetch('https://ks1-trust-score.onrender.com/api/trust/recalculate', {
       method: 'POST',
@@ -44,11 +37,9 @@ const approveInternally = async (smeId, businessName) => {
 const startVerification = async (req, res) => {
   try {
     const { smeId, businessName, ownerName, idType, idNumber, documentUrls, city } = req.body;
-
     if (!smeId || !ownerName || !idType || !idNumber) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
-
     await IdentityRecord.create({
       smeId,
       ownerName,
@@ -56,15 +47,12 @@ const startVerification = async (req, res) => {
       idNumber,
       documentUrl: Array.isArray(documentUrls) ? documentUrls[0] : documentUrls
     });
-
     const riskLevel = await calculateRiskLevel({ smeId, idType, idNumber, city });
     await KycRequest.create({ smeId, riskLevel });
-
     if (riskLevel === 'LOW') {
       await approveInternally(smeId, businessName);
       return res.json({ success: true, status: 'KYC_APPROVED', riskLevel });
     }
-
     res.json({ success: true, status: 'KYC_PENDING', riskLevel, message: 'Awaiting manual review' });
   } catch (err) {
     console.error('KYC Error:', err.message);
@@ -88,7 +76,6 @@ const getPendingReviews = async (req, res) => {
       status: 'KYC_PENDING',
       riskLevel: { $in: ['MEDIUM', 'HIGH'] }
     }).limit(50).lean();
-
     res.json(pending || []);
   } catch (err) {
     console.error('Pending reviews error:', err.message);
@@ -119,10 +106,23 @@ const rejectSME = async (req, res) => {
   }
 };
 
+// ✅ STATS ENDPOINT
+const getStats = async (req, res) => {
+  try {
+    const verified = await KycRequest.countDocuments({ status: 'KYC_APPROVED' });
+    const pending = await KycRequest.countDocuments({ status: 'KYC_PENDING' });
+    res.json({ verified, pending });
+  } catch (err) {
+    console.error('KYC stats error:', err.message);
+    res.status(500).json({ verified: 0, pending: 0 });
+  }
+};
+
 module.exports = {
   startVerification,
   getStatus,
   approveSME,
   rejectSME,
-  getPendingReviews
+  getPendingReviews,
+  getStats
 };
