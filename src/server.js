@@ -12,7 +12,7 @@ app.use(helmet());
 app.use(cors({ origin: /\.onrender\.com$/ }));
 app.use(express.json());
 
-// ✅ ONLY KYC ROUTES — NOT trust.routes!
+// ✅ ONLY KYC ROUTES
 app.use('/api/kyc', require('./routes/kyc.routes'));
 
 app.get('/health', (req, res) => {
